@@ -516,8 +516,8 @@ struct Config {
   static const uint8_t SD_SCLK_PIN = 41;
 
   // Joystick
-  static const adc1_channel_t ADC_JOYSTICK_X = ADC1_CHANNEL_9;
-  static const adc1_channel_t ADC_JOYSTICK_Y = ADC1_CHANNEL_8;
+  static const adc_channel_t ADC_JOYSTICK_X = ADC_CHANNEL_9;
+  static const adc_channel_t ADC_JOYSTICK_Y = ADC_CHANNEL_8;
   static const uint8_t JOYSTICK_FIRE_PIN = 44;
   static const uint8_t JOYSTICK_FIRE2_PIN = 21;
 
