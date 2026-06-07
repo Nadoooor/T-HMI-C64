@@ -84,7 +84,6 @@
 #define USE_NOFS
 #define USE_C64JOYSTICK
 #define USE_NOSOUND
-#endif
 #elif defined(BOARD_SnakeBoy)
 #define USE_ST7789VSERIAL
 #define USE_SDCARD
@@ -92,6 +91,7 @@
 #define USE_I2SSOUND
 #define USE_OTA
 #define USE_WIFI_UPLOAD
+#endif
 #else
 
 
