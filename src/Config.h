@@ -85,6 +85,15 @@
 #define USE_C64JOYSTICK
 #define USE_NOSOUND
 #endif
+#elif defined(SnakeBoy)
+#define USE_ST7789VSERIAL
+#define USE_SDCARD
+#define USE_ARDUINOJOYSTICK
+#define USE_I2SSOUND
+#define USE_OTA
+#define USE_WIFI_UPLOAD
+#else
+
 
 // WiFi is needed when OTA, Web-Keyboard or WLAN Upload is enabled
 #if defined(USE_OTA) || defined(USE_WEB_KEYBOARD) || defined(USE_WIFI_UPLOAD)
@@ -452,6 +461,73 @@ struct Config {
   static constexpr const char *CHARACTERISTIC_UUID =
       "3b05e9bf-086f-4b56-9c37-7b7eeb30b28b";
 };
+
+
+#elif defined(SnakeBoy)
+
+#define HAS_DEFAULT_VOLUME
+
+struct Config {
+  // --- constants to be defined for each board ---
+
+  // delay until next display refresh
+  static const uint8_t REFRESHDELAY = 5;
+
+  // "heuristic performance factor"
+  static constexpr double HEURISTIC_PERFORMANCE_FACTOR = 0.5;
+
+  // --- driver specific constants ---
+
+  // power
+  static const gpio_num_t PWR_KEY_INPUT_PIN = GPIO_NUM_6;
+  static const gpio_num_t PWR_CONTROL_PIN = GPIO_NUM_7;
+  static const adc_channel_t BAT_ADC = ADC_CHANNEL_7; // GPIO8
+
+  // filesystem
+  static constexpr const char *PATH = "";
+  static constexpr const char *CONFIGFILE = ".config.json";
+
+  // display driver
+  static const uint16_t LCDWIDTH = 168;
+  static const uint16_t LCDHEIGHT = 120;
+
+  // ST7789VSerial
+  static const int8_t MISO = -1;
+  static const uint8_t MOSI = 5;
+  static const uint8_t SCLK = 6;
+  static const uint8_t LCD_CS = 39;
+  static const uint8_t LCD_DC = 4;
+  static const uint8_t LCD_RST = 40;
+  static const uint8_t LCD_BACKLIGHT_PIN = 7;
+  static const uint16_t LCD_BACKLIGHT_FREQUENCY = 20000;
+  static const uint8_t LCD_BACKLIGHT_RESOLUTION = 10;
+  static const uint16_t LCD_BACKLIGHT_DUTYFACTOR = 500;
+
+  // Sound
+  static const uint8_t DEFAULT_VOLUME = 128;
+  static const uint8_t I2S_DOUT = 1;
+  static const uint8_t I2S_BCLK = 48;
+  static const uint8_t I2S_LRC = 38;
+
+  // SDCard
+  static const gpio_num_t SD_D3_PIN = GPIO_NUM_11;
+  static const uint8_t SD_MISO_PIN = 42;
+  static const uint8_t SD_MOSI_PIN = 8;
+  static const uint8_t SD_SCLK_PIN = 41;
+
+  // Joystick
+  static const adc1_channel_t ADC_JOYSTICK_X = ADC1_CHANNEL_9;
+  static const adc1_channel_t ADC_JOYSTICK_Y = ADC1_CHANNEL_8;
+  static const uint8_t JOYSTICK_FIRE_PIN = 44;
+  static const uint8_t JOYSTICK_FIRE2_PIN = 21;
+
+  // BLEKB
+  static constexpr const char *SERVICE_UUID =
+      "695ba701-a48c-43f6-9028-3c885771f19f";
+  static constexpr const char *CHARACTERISTIC_UUID =
+      "3b05e9bf-086f-4b56-9c37-7b7eeb30b28b";
+};
+
 
 #else
 
