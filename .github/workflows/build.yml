@@ -17,7 +17,7 @@ jobs:
             keyboard: BLE_KEYBOARD
             fqbn: "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=8M,PSRAM=opi,PartitionScheme=default_8MB"
             extra_flags: "-DBOARD_HAS_PSRAM"
-            
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -129,4 +129,3 @@ jobs:
             2. Extract all files.
             3. Run `flash.sh` (Linux/Mac) or `flash.bat` (Windows).
           token: ${{ secrets.GITHUB_TOKEN }}
-
