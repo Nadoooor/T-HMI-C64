@@ -1,0 +1,171 @@
+name: build
+on: [push]
+
+permissions:
+  contents: write
+
+jobs:
+
+  build-esp32:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - board: T_HMI
+            chip: "esp32s3"
+            keyboard: BLE_KEYBOARD
+            fqbn: "esp32:esp32:esp32s3:CDCOnBoot=cdc,DFUOnBoot=dfu,FlashSize=16M,JTAGAdapter=builtin,PartitionScheme=huge_app,PSRAM=opi,DebugLevel=info"
+            extra_flags: "-DBOARD_HAS_PSRAM"
+          - board: T_HMI
+            chip: "esp32s3"
+            keyboard: WEB_KEYBOARD
+            fqbn: "esp32:esp32:esp32s3:CDCOnBoot=cdc,DFUOnBoot=dfu,FlashSize=16M,JTAGAdapter=builtin,PartitionScheme=huge_app,PSRAM=opi,DebugLevel=info"
+            extra_flags: "-DBOARD_HAS_PSRAM"
+          - board: T_DISPLAY_S3
+            chip: "esp32s3"
+            keyboard: BLE_KEYBOARD
+            fqbn: "esp32:esp32:esp32s3:CDCOnBoot=cdc,DFUOnBoot=dfu,FlashSize=16M,JTAGAdapter=builtin,PartitionScheme=huge_app,PSRAM=opi,DebugLevel=info"
+            extra_flags: "-DBOARD_HAS_PSRAM"
+          - board: T_DISPLAY_S3
+            chip: "esp32s3"
+            keyboard: WEB_KEYBOARD
+            fqbn: "esp32:esp32:esp32s3:CDCOnBoot=cdc,DFUOnBoot=dfu,FlashSize=16M,JTAGAdapter=builtin,PartitionScheme=huge_app,PSRAM=opi,DebugLevel=info"
+            extra_flags: "-DBOARD_HAS_PSRAM"
+          - board: WAVESHARE
+            chip: "esp32s3"
+            keyboard: BLE_KEYBOARD
+            fqbn: "esp32:esp32:esp32s3:CDCOnBoot=cdc,DFUOnBoot=dfu,FlashSize=16M,JTAGAdapter=builtin,PartitionScheme=app3M_fat9M_16MB,PSRAM=opi,DebugLevel=info"
+            extra_flags: "-DBOARD_HAS_PSRAM"
+          - board: WAVESHARE
+            chip: "esp32s3"
+            keyboard: WEB_KEYBOARD
+            fqbn: "esp32:esp32:esp32s3:CDCOnBoot=cdc,DFUOnBoot=dfu,FlashSize=16M,JTAGAdapter=builtin,PartitionScheme=app3M_fat9M_16MB,PSRAM=opi,DebugLevel=info"
+            extra_flags: "-DBOARD_HAS_PSRAM"
+          - board: CYD
+            chip: "esp32"
+            keyboard: NO_KEYBOARD
+            fqbn: "esp32:esp32:esp32:FlashMode=qio,FlashSize=4M,PartitionScheme=huge_app,LoopCore=0,DebugLevel=info"
+            extra_flags: ""
+          - board: LEDMATRIX1
+            chip: "esp32s3"
+            keyboard: BLE_KEYBOARD
+            fqbn: "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=8M,PSRAM=opi,PartitionScheme=default_8MB"
+            extra_flags: "-DBOARD_HAS_PSRAM"
+          - board: LEDMATRIX2
+            chip: "esp32s3"
+            keyboard: BLE_KEYBOARD
+            fqbn: "esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=8M,PSRAM=opi,PartitionScheme=default_8MB"
+            extra_flags: "-DBOARD_HAS_PSRAM"
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build Firmware
+        run: |
+          EXPORT_PATH="${{ github.workspace }}/export"
+          mkdir -p "$EXPORT_PATH"
+          docker run --rm -v ${{ github.workspace }}:/workspace/T-HMI-C64 -v "$EXPORT_PATH":/output \
+            docker.io/retroelec42/arduino-cli-thmic64 compile \
+            --library . \
+            --fqbn "${{ matrix.fqbn }}" \
+            --export-binaries --output-dir /output \
+            --build-property "build.extra_flags=-DBOARD_${{ matrix.board }} -DUSE_${{ matrix.keyboard }} -DESP32 ${{ matrix.extra_flags }}" \
+            arduino/C64Emu/C64Emu.ino
+          sudo chown -R $USER:$USER "$EXPORT_PATH"
+
+      - name: Optimize and Trim Merged Binary
+        run: |
+          EXPORT_PATH="${{ github.workspace }}/export"
+          MERGED_FILE="$EXPORT_PATH/C64Emu.ino.merged.bin"
+          APP_FILE="$EXPORT_PATH/C64Emu.ino.bin"
+          if [ -f "$MERGED_FILE" ] && [ -f "$APP_FILE" ]; then
+            echo "Optimizing $MERGED_FILE..."
+            python3 -c "
+          import os
+          m_path = '$MERGED_FILE'
+          a_path = '$APP_FILE'
+          needed = 0x10000 + os.path.getsize(a_path) + 0x1000
+          needed = (needed + 0xFFF) & ~0xFFF
+          with open(m_path, 'rb+') as f:
+              f.truncate(needed)
+          print(f'Done! Merged binary trimmed to {needed} bytes.')
+          "
+          else
+            echo "Error: Required bin files not found in $EXPORT_PATH"
+            exit 1
+          fi
+
+      - name: Prepare and Rename
+        run: |
+          EXPORT_PATH="${{ github.workspace }}/export"
+          find "$EXPORT_PATH" -name "*.merged.bin" -exec mv {} "$EXPORT_PATH/C64Emu.ino.merged.bin" \; 2>/dev/null || true
+          sed -e "s|__BOARD__|${{ matrix.board }}|g" -e "s|__CHIP__|${{ matrix.chip }}|g" scripts/flash.sh > "$EXPORT_PATH/flash.sh"
+          sed -e "s|__BOARD__|${{ matrix.board }}|g" -e "s|__CHIP__|${{ matrix.chip }}|g" scripts/flash.bat > "$EXPORT_PATH/flash.bat"
+          chmod +x "$EXPORT_PATH/flash.sh"
+          cp "${{ github.workspace }}/scripts/README.md" "$EXPORT_PATH/README.md" 2>/dev/null || true
+
+      - name: Upload ESP32 Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: t-hmi-c64-${{ matrix.board }}-${{ matrix.keyboard }}
+          path: |
+            ${{ github.workspace }}/export/C64Emu.ino.merged.bin
+            ${{ github.workspace }}/export/flash.sh
+            ${{ github.workspace }}/export/flash.bat
+            ${{ github.workspace }}/export/README.md
+
+  build-windows:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build EXE with Docker
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/build docker.io/retroelec42/sdl2-cross sh -c "make -f windows/Makefile"
+
+      - name: Upload Executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-executable
+          path: |
+            windows/c64win.exe
+
+  release:
+    name: "Create GitHub Release"
+    needs: build-esp32
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./temp-downloads
+      - name: Bundle Artifacts to ZIPs
+        run: |
+          mkdir -p ./final-assets
+          cd ./temp-downloads
+          for dir in */; do
+            zipname="${dir%/}.zip"
+            echo "pack $dir as $zipname..."
+            zip -rj "../final-assets/$zipname" "$dir"
+          done
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./final-assets/*.zip
+          name: "C64 Emulator Release ${{ github.ref_name }}"
+          body: |
+            ### Release ${{ github.ref_name }}
+
+            Pre-compiled binaries for all supported Board & Keyboard combinations.
+
+            **Installation:**
+            1. Download the ZIP matching your hardware.
+            2. Extract all files.
+            3. Run `flash.sh` (Linux/Mac) or `flash.bat` (Windows).
+          token: ${{ secrets.GITHUB_TOKEN }}
