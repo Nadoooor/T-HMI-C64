@@ -85,7 +85,7 @@
 #define USE_C64JOYSTICK
 #define USE_NOSOUND
 #endif
-#elif defined(SnakeBoy)
+#elif defined(BOARD_SnakeBoy)
 #define USE_ST7789VSERIAL
 #define USE_SDCARD
 #define USE_ARDUINOJOYSTICK
@@ -463,7 +463,7 @@ struct Config {
 };
 
 
-#elif defined(SnakeBoy)
+#elif defined(BOARD_SnakeBoy)
 
 #define HAS_DEFAULT_VOLUME
 

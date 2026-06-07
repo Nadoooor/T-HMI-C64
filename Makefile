@@ -5,7 +5,8 @@
 #BOARD := CYD
 #BOARD := LEDMATRIX1
 #BOARD := LEDMATRIX2
-BOARD := LOLIN_C3_PICO
+#BOARD := LOLIN_C3_PICO
+BOARD := SnakeBoy
 
 # choose keyboard
 KEYBOARD := BLE_KEYBOARD
@@ -44,6 +45,10 @@ else ifeq ($(BOARD), LEDMATRIX1)
   FQBN := esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=8M,PSRAM=enabled,PartitionScheme=default_8MB
   BUILD_EXTRA_FLAGS += -DBOARD_HAS_PSRAM
 else ifeq ($(BOARD), LEDMATRIX2)
+  # ESP32-S3-WROOM1 N16R8 -> (8 MB Octal-SPI PSRAM) -> PSRAM=opi
+  FQBN := esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=8M,PSRAM=opi,PartitionScheme=default_8MB
+  BUILD_EXTRA_FLAGS += -DBOARD_HAS_PSRAM
+  else ifeq ($(BOARD), SnakeBoy)
   # ESP32-S3-WROOM1 N16R8 -> (8 MB Octal-SPI PSRAM) -> PSRAM=opi
   FQBN := esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=8M,PSRAM=opi,PartitionScheme=default_8MB
   BUILD_EXTRA_FLAGS += -DBOARD_HAS_PSRAM
