@@ -28,6 +28,8 @@
 #include "CYD.h"
 #elif defined(BOARD_WAVESHARE)
 #include "Waveshare.h"
+#elif defined(BOARD_SnakeBoy)
+#include "SnakeBoy.h"
 #elif defined(BOARD_LEDMATRIX1) || defined(BOARD_LEDMATRIX2)
 #include "LEDMatrixBoard.h"
 #elif defined(BOARD_LOLIN_C3_PICO)
@@ -48,6 +50,8 @@ BoardDriver *create() {
   return new CYD();
 #elif defined(BOARD_WAVESHARE)
   return new Waveshare();
+#elif defined(BOARD_SnakeBoy)
+  return new SnakeBoy();
 #elif defined(BOARD_LEDMATRIX1) || defined(BOARD_LEDMATRIX2)
   return new LEDMatrixBoard();
 #elif defined(BOARD_LOLIN_C3_PICO)
