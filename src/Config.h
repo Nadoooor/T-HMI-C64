@@ -92,7 +92,7 @@
 #define USE_OTA
 #define USE_WIFI_UPLOAD
 #endif
-#else
+
 
 
 // WiFi is needed when OTA, Web-Keyboard or WLAN Upload is enabled
